@@ -3,11 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      // Google Drive direct-view URLs
+      // Google Drive thumbnail URLs
       {
         protocol: "https",
         hostname: "drive.google.com",
-        pathname: "/uc/**",
+        pathname: "/thumbnail/**",
       },
       // Google user content (where Drive images are actually served from)
       {

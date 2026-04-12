@@ -56,11 +56,11 @@ function buildReleaseLine(row: SheetRow): string {
 }
 
 function normalizeGDriveUrl(raw: string): string {
-  // Convert Google Drive share URL to a direct-view URL
-  // https://drive.google.com/file/d/{ID}/view → https://drive.google.com/uc?export=view&id={ID}
-  const match = raw.match(/\/file\/d\/([^/]+)/);
+  // Convert Google Drive share URL to a thumbnail URL (works with public files)
+  // https://drive.google.com/file/d/{ID}/view → https://drive.google.com/thumbnail?id={ID}&sz=w600
+  const match = raw.match(/\/file\/d\/([^/?]+)/);
   if (match) {
-    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w600`;
   }
   return raw;
 }
@@ -75,9 +75,15 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
 
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
 
+  // In development: always fetch fresh. In production: cache for 5 minutes.
+  const fetchOptions =
+    process.env.NODE_ENV === "development"
+      ? { cache: "no-store" as const }
+      : { next: { revalidate: 300 } };
+
   let csvText: string;
   try {
-    const res = await fetch(url, { next: { revalidate: 300 } }); // refresh every 5 min
+    const res = await fetch(url, fetchOptions);
     if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
     csvText = await res.text();
   } catch (err) {

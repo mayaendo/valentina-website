@@ -1,13 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --black: #0d0d0d;
-  --white: #ffffff;
-  --gray-label: #888888;
-  --gray-meta: #6a6a6a;
-  --gray-light: #9a9a9a;
-  --border: #e0e0e0;
-  --placeholder: #f0f0f0;
+  --black: #4b4b30;       /* Mosswood */
+  --white: #f0ead8;       /* Almond Cream */
+  --gray-label: #afa857;  /* Golden Fennel */
+  --gray-meta: #7a7a55;   /* Mosswood mid-tone */
+  --gray-light: #9a9a7a;  /* Mosswood faded */
+  --border: #d6ceb8;      /* Almond Cream darkened */
+  --placeholder: #e8e2d0; /* Almond Cream darkened */
+  --guinda: #6b0020;
+  --glacier: #aec7e0;
   --nav-pad-top: 3.5rem;
   --carousel-pad: clamp(1.25rem, 4vw, 3rem);
   --carousel-gap: 1.5rem;
@@ -115,14 +117,14 @@ body {
 .lang-toggle {
   appearance: none;
   background: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--guinda);
   padding: 0.2rem 0.55rem;
   font-family: var(--font-display), system-ui, sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--gray-label);
+  color: var(--guinda);
   cursor: pointer;
   transition: opacity 0.2s ease;
   line-height: 1.6;
@@ -130,7 +132,7 @@ body {
 
 .lang-toggle:hover,
 .lang-toggle:focus-visible {
-  opacity: 0.55;
+  opacity: 0.65;
   outline: none;
 }
 
@@ -359,8 +361,8 @@ body {
 
 .contact__email a:hover,
 .contact__email a:focus-visible {
-  opacity: 0.6;
-  border-bottom-color: var(--black);
+  opacity: 0.75;
+  border-bottom-color: var(--glacier);
   outline: none;
 }
 
