@@ -1,0 +1,346 @@
+/* Valentina Caillaux — editorial one-page portfolio */
+
+:root {
+  --black: #0d0d0d;
+  --white: #ffffff;
+  --gray-label: #888888;
+  --gray-meta: #6a6a6a;
+  --gray-light: #9a9a9a;
+  --border: #e0e0e0;
+  --placeholder: #f0f0f0;
+  --font-display: "Barlow Condensed", system-ui, sans-serif;
+  --font-body: "Cormorant Garamond", "Times New Roman", serif;
+  --nav-pad-top: 3.5rem;
+  --carousel-pad: clamp(1.25rem, 4vw, 3rem);
+  --carousel-gap: 1.5rem;
+  --card-width: clamp(
+    200px,
+    calc((100vw - 2 * var(--carousel-pad) - 3 * var(--carousel-gap)) / 4),
+    260px
+  );
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--white);
+  color: var(--black);
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ——— Fixed nav ——— */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--white);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  max-width: 100%;
+  padding: 1.25rem clamp(1.25rem, 4vw, 3rem);
+}
+
+.nav__links,
+.nav__social {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-label,
+.nav a,
+.nav__sep {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gray-label);
+}
+
+.nav a {
+  text-decoration: none;
+  color: var(--gray-label);
+  transition: opacity 0.2s ease;
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+  opacity: 0.55;
+  outline: none;
+}
+
+.nav__icon-link {
+  display: flex;
+  color: var(--black);
+  opacity: 0.75;
+  transition: opacity 0.2s ease;
+}
+
+.nav__icon-link:hover,
+.nav__icon-link:focus-visible {
+  opacity: 0.45;
+  outline: none;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.icon--lg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ——— Hero ——— */
+.hero {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--nav-pad-top) + 2rem) clamp(1.25rem, 5vw, 4rem) 4rem;
+  text-align: center;
+}
+
+.hero__name {
+  margin: 0 0 2.5rem;
+  padding: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2.75rem, 14.5vw, 11rem);
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--black);
+  max-width: 100%;
+}
+
+.hero__line {
+  display: block;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .hero__line {
+    white-space: normal;
+  }
+}
+
+.hero__wave {
+  margin-bottom: 2.75rem;
+}
+
+.waveform-svg {
+  width: clamp(72px, 18vw, 120px);
+  height: auto;
+  display: block;
+}
+
+.hero__bio {
+  max-width: 38rem;
+  margin: 0 auto 2rem;
+}
+
+.hero__bio p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.75;
+  color: var(--black);
+}
+
+.credit-key {
+  margin: 0;
+  max-width: 36rem;
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--gray-label);
+}
+
+/* ——— Credits carousels ——— */
+.credits {
+  padding: 6rem 0 8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 5.5rem;
+}
+
+.carousel-block {
+  width: 100%;
+}
+
+.carousel-block__label-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 var(--carousel-pad) 1.25rem;
+  width: 100%;
+}
+
+.section-label {
+  flex-shrink: 0;
+  max-width: 55%;
+}
+
+.section-label__rule {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  min-width: 2rem;
+}
+
+.carousel-track {
+  display: flex;
+  gap: var(--carousel-gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 var(--carousel-pad) 0.5rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.carousel-track:focus-visible {
+  outline: 1px solid var(--border);
+  outline-offset: 4px;
+}
+
+.credit-card {
+  flex: 0 0 var(--card-width);
+  scroll-snap-align: start;
+  background: var(--white);
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --card-width: calc((100vw - 2 * var(--carousel-pad) - var(--carousel-gap)) / 1.3);
+  }
+}
+
+.credit-card__art {
+  aspect-ratio: 1;
+  width: 100%;
+  background: var(--placeholder);
+  border: 1px solid var(--border);
+}
+
+.credit-card__artist {
+  margin: 1rem 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--black);
+  text-align: left;
+}
+
+.credit-card__meta {
+  margin: 0 0 0.2rem;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--gray-meta);
+  text-align: left;
+}
+
+.credit-card__label {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--gray-light);
+  text-align: left;
+}
+
+/* ——— Contact ——— */
+.contact {
+  padding: 8rem clamp(1.25rem, 4vw, 3rem) 10rem;
+  text-align: center;
+}
+
+.contact__heading {
+  margin: 0 0 2.5rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 8vw, 4rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--black);
+}
+
+.contact__email {
+  margin: 0 0 2rem;
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+
+.contact__email a {
+  color: var(--black);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+.contact__email a:hover,
+.contact__email a:focus-visible {
+  opacity: 0.6;
+  border-bottom-color: var(--black);
+  outline: none;
+}
+
+.contact__social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.contact__icon-link {
+  color: var(--black);
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.contact__icon-link:hover,
+.contact__icon-link:focus-visible {
+  opacity: 0.45;
+  outline: none;
+}
