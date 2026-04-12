@@ -36,7 +36,7 @@ export function HomeClient({ carousels }: Props) {
             >
               {t.lang}
             </button>
-            <SocialIcons className="nav__icon-link" />
+            <SocialIcons />
           </div>
         </nav>
       </header>
@@ -76,7 +76,7 @@ export function HomeClient({ carousels }: Props) {
               <a href="mailto:valentinacxzu@gmail.com">valentinacxzu@gmail.com</a>
             </p>
             <div className="contact__social">
-              <SocialIcons className="contact__icon-link" size="md" />
+              <SocialIcons size="md" />
             </div>
           </FadeIn>
         </section>

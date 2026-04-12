@@ -115,17 +115,49 @@ body {
   outline: none;
 }
 
+/* ——— Filled social icon buttons ——— */
+.social-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  transition: opacity 0.2s ease;
+}
+
+.social-btn:hover,
+.social-btn:focus-visible {
+  opacity: 0.75;
+  outline: none;
+}
+
+.social-btn--ig {
+  background: #6b0020;
+  color: var(--white);
+}
+
+.social-btn--sp {
+  background: #afa857;
+  color: var(--white);
+}
+
+.social-btn--lg {
+  width: 40px;
+  height: 40px;
+}
+
 .lang-toggle {
   appearance: none;
-  background: none;
-  border: 1px solid var(--guinda);
+  background: #3a7a9c;
+  border: 1px solid #3a7a9c;
   padding: 0.2rem 0.55rem;
   font-family: var(--font-display), system-ui, sans-serif;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--guinda);
+  color: var(--white);
   cursor: pointer;
   transition: opacity 0.2s ease;
   line-height: 1.6;
