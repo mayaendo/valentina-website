@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CreditCarousel } from "./CreditCarousel";
+import { FadeIn } from "./FadeIn";
 import { SocialIcons } from "./SocialIcons";
 import { Waveform } from "./Waveform";
 import type { CarouselBlock } from "@/data/credits";
@@ -53,30 +54,31 @@ export function HomeClient({ carousels }: Props) {
           <div className="hero__bio">
             <p>{t.hero.bio}</p>
           </div>
-
-          <p className="credit-key">{t.hero.creditKey}</p>
         </section>
 
         {/* ——— Credit Carousels ——— */}
         <section id="credits" className="credits">
-          {carousels.map((block) => (
-            <CreditCarousel
-              key={block.id}
-              title={t.carousels[block.titleKey]}
-              items={block.items}
-            />
+          {carousels.map((block, i) => (
+            <FadeIn key={block.id} delay={i * 80}>
+              <CreditCarousel
+                title={t.carousels[block.titleKey]}
+                items={block.items}
+              />
+            </FadeIn>
           ))}
         </section>
 
         {/* ——— Contact ——— */}
         <section id="contact" className="contact">
-          <h2 className="contact__heading">{t.contact.heading}</h2>
-          <p className="contact__email">
-            <a href="mailto:valentinacxzu@gmail.com">valentinacxzu@gmail.com</a>
-          </p>
-          <div className="contact__social">
-            <SocialIcons className="contact__icon-link" size="md" />
-          </div>
+          <FadeIn>
+            <h2 className="contact__heading">{t.contact.heading}</h2>
+            <p className="contact__email">
+              <a href="mailto:valentinacxzu@gmail.com">valentinacxzu@gmail.com</a>
+            </p>
+            <div className="contact__social">
+              <SocialIcons className="contact__icon-link" size="md" />
+            </div>
+          </FadeIn>
         </section>
       </main>
     </>

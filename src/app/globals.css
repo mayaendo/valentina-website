@@ -91,7 +91,8 @@ body {
 
 .nav a {
   text-decoration: none;
-  color: var(--gray-label);
+  color: var(--black);
+  font-weight: 700;
   transition: opacity 0.2s ease;
 }
 
@@ -201,18 +202,45 @@ body {
 .hero__bio p {
   margin: 0;
   font-size: 16px;
-  font-weight: 300;
+  font-weight: 600;
   line-height: 1.75;
   color: var(--black);
 }
 
-.credit-key {
-  margin: 0;
-  max-width: 36rem;
-  font-family: var(--font-body), "Cormorant Garamond", serif;
-  font-size: 12px;
-  line-height: 1.6;
-  color: var(--gray-label);
+/* credit-key removed */
+
+/* ——— Entrance animations ——— */
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero__name  { animation: heroFadeUp 1s   ease both; }
+.hero__wave  { animation: heroFadeUp 0.9s ease 0.25s both; }
+.hero__bio   { animation: heroFadeUp 0.9s ease 0.45s both; }
+
+.fade-in-wrapper {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.fade-in--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__name,
+  .hero__wave,
+  .hero__bio {
+    animation: none;
+  }
+  .fade-in-wrapper {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* ——— Credits carousels ——— */

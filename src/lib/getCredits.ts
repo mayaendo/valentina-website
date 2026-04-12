@@ -52,7 +52,8 @@ function buildReleaseLine(row: SheetRow): string {
   const title = row.Title?.trim();
   const role = row.Role?.trim();
   const prefix = fmt && fmt !== "—" && fmt !== "" ? `${fmt} ` : "";
-  return `${prefix}\u201c${title}\u201d (${role})`;
+  const suffix = role && role !== "—" ? ` (${role})` : "";
+  return `${prefix}\u201c${title}\u201d${suffix}`;
 }
 
 function normalizeGDriveUrl(raw: string): string {
