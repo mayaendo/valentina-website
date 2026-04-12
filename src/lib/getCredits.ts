@@ -6,15 +6,11 @@
  *
  * Section values (case-insensitive):
  *   Engineer & Production | Engineer | Mix Engineer | Songwriter | Assistant Engineer
- *
- * Falls back to the hardcoded data in src/data/credits.ts if no SHEET_ID is set
- * or if the fetch fails.
  */
 
 import Papa from "papaparse";
 import type { CarouselBlock, CreditItem } from "@/data/credits";
 import type { CarouselTitleKey } from "@/lib/i18n";
-import { carousels as fallbackCarousels } from "@/data/credits";
 
 const SECTION_MAP: Record<string, CarouselTitleKey> = {
   "engineer & production": "engProd",
@@ -73,7 +69,8 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
 
   if (!sheetId) {
-    return fallbackCarousels;
+    console.warn("[getCarousels] GOOGLE_SHEET_ID not set — carousels will be empty.");
+    return [];
   }
 
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
@@ -84,8 +81,8 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
     if (!res.ok) throw new Error(`Sheet fetch failed: ${res.status}`);
     csvText = await res.text();
   } catch (err) {
-    console.error("[getCarousels] Could not fetch sheet, using fallback.", err);
-    return fallbackCarousels;
+    console.error("[getCarousels] Could not fetch sheet.", err);
+    return [];
   }
 
   const { data, errors } = Papa.parse<SheetRow>(csvText, {
@@ -97,13 +94,13 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
     console.warn("[getCarousels] CSV parse warnings:", errors);
   }
 
-  // Group rows into carousels
+  // Group rows by section
   const groups = new Map<CarouselTitleKey, CreditItem[]>();
 
   for (const row of data) {
     const sectionRaw = row.Section?.trim().toLowerCase();
     const titleKey = SECTION_MAP[sectionRaw];
-    if (!titleKey) continue; // skip rows with unknown section
+    if (!titleKey) continue;
 
     const item: CreditItem = {
       artist: row.Artist?.trim() ?? "",
@@ -120,7 +117,7 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
     groups.set(titleKey, existing);
   }
 
-  // Build CarouselBlock[] in fixed order, skip empty sections
+  // Return sections in fixed order, only those with at least one item
   const result: CarouselBlock[] = [];
   for (const key of SECTION_ORDER) {
     const items = groups.get(key);
@@ -129,6 +126,5 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
     }
   }
 
-  // Fall back to hardcoded data if sheet returned nothing useful
-  return result.length > 0 ? result : fallbackCarousels;
+  return result;
 }
