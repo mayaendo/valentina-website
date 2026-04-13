@@ -6,11 +6,102 @@
  *
  * Section values (case-insensitive):
  *   Engineer & Production | Engineer | Mix Engineer | Songwriter | Assistant Engineer
+ *
+ * If "Artwork URL" is blank but "Music URL" is a Spotify link, artwork is
+ * fetched automatically from the Spotify Web API using client credentials.
+ * Requires SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env.local.
  */
 
 import Papa from "papaparse";
 import type { CarouselBlock, CreditItem } from "@/data/credits";
 import type { CarouselTitleKey } from "@/lib/i18n";
+
+// ——— Spotify helpers ———
+
+let spotifyTokenCache: { token: string; expiresAt: number } | null = null;
+
+async function getSpotifyToken(): Promise<string | null> {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) return null;
+
+  const now = Date.now();
+  if (spotifyTokenCache && spotifyTokenCache.expiresAt > now + 5000) {
+    return spotifyTokenCache.token;
+  }
+
+  try {
+    const res = await fetch("https://accounts.spotify.com/api/token", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+      },
+      body: "grant_type=client_credentials",
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(`Spotify token fetch failed: ${res.status}`);
+    const json = await res.json() as { access_token: string; expires_in: number };
+    spotifyTokenCache = {
+      token: json.access_token,
+      expiresAt: now + json.expires_in * 1000,
+    };
+    return spotifyTokenCache.token;
+  } catch (err) {
+    console.error("[Spotify] Could not get access token.", err);
+    return null;
+  }
+}
+
+/**
+ * Parses a Spotify URL and returns { type, id } where type is
+ * "track" | "album" | "episode" | etc., or null if not a Spotify URL.
+ */
+function parseSpotifyUrl(url: string): { type: string; id: string } | null {
+  try {
+    const u = new URL(url);
+    if (!u.hostname.includes("spotify.com")) return null;
+    // Strip locale segments like "intl-es", "intl-pt", etc.
+    const parts = u.pathname.split("/").filter((p) => p && !p.startsWith("intl-"));
+    // parts is e.g. ["track", "4cOdK2wGLETKBW3PvgPWqT"] or ["album", "xxx"]
+    if (parts.length >= 2) return { type: parts[0], id: parts[1] };
+  } catch {
+    // not a valid URL
+  }
+  return null;
+}
+
+async function getSpotifyArtwork(musicUrl: string): Promise<string | undefined> {
+  const parsed = parseSpotifyUrl(musicUrl);
+  if (!parsed) return undefined;
+
+  const token = await getSpotifyToken();
+  if (!token) return undefined;
+
+  // Tracks → use album images. Albums/singles/EPs → use album images directly.
+  const endpoint =
+    parsed.type === "track"
+      ? `https://api.spotify.com/v1/tracks/${parsed.id}`
+      : `https://api.spotify.com/v1/${parsed.type}s/${parsed.id}`;
+
+  try {
+    const res = await fetch(endpoint, {
+      headers: { Authorization: `Bearer ${token}` },
+      next: { revalidate: 86400 }, // cache artwork for 24 h
+    });
+    if (!res.ok) throw new Error(`Spotify API ${res.status}`);
+    const json = await res.json() as {
+      images?: { url: string }[];
+      album?: { images?: { url: string }[] };
+    };
+    const images =
+      json.images ?? json.album?.images ?? [];
+    return (images[0] as { url: string } | undefined)?.url;
+  } catch (err) {
+    console.error(`[Spotify] Could not fetch artwork for ${musicUrl}`, err);
+    return undefined;
+  }
+}
 
 const SECTION_MAP: Record<string, CarouselTitleKey> = {
   "engineer & production": "engProd",
@@ -101,24 +192,41 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
     console.warn("[getCarousels] CSV parse warnings:", errors);
   }
 
+  // Resolve artwork for all rows in parallel
+  const resolvedItems = await Promise.all(
+    data.map(async (row) => {
+      const sectionRaw = row.Section?.trim().toLowerCase();
+      const titleKey = SECTION_MAP[sectionRaw];
+      if (!titleKey) return null;
+
+      const manualArtwork = row["Artwork URL"]?.trim();
+      const musicUrl = row["Music URL"]?.trim() || undefined;
+
+      let artworkUrl: string | undefined;
+      if (manualArtwork) {
+        artworkUrl = normalizeGDriveUrl(manualArtwork);
+      } else if (musicUrl) {
+        artworkUrl = await getSpotifyArtwork(musicUrl);
+      }
+
+      const item: CreditItem = {
+        artist: row.Artist?.trim() ?? "",
+        releaseLine: buildReleaseLine(row),
+        label: row.Label?.trim() || "—",
+        musicUrl,
+        artworkUrl,
+      };
+
+      return { titleKey, item };
+    })
+  );
+
   // Group rows by section
   const groups = new Map<CarouselTitleKey, CreditItem[]>();
 
-  for (const row of data) {
-    const sectionRaw = row.Section?.trim().toLowerCase();
-    const titleKey = SECTION_MAP[sectionRaw];
-    if (!titleKey) continue;
-
-    const item: CreditItem = {
-      artist: row.Artist?.trim() ?? "",
-      releaseLine: buildReleaseLine(row),
-      label: row.Label?.trim() || "—",
-      musicUrl: row["Music URL"]?.trim() || undefined,
-      artworkUrl: row["Artwork URL"]?.trim()
-        ? normalizeGDriveUrl(row["Artwork URL"].trim())
-        : undefined,
-    };
-
+  for (const resolved of resolvedItems) {
+    if (!resolved) continue;
+    const { titleKey, item } = resolved;
     const existing = groups.get(titleKey) ?? [];
     existing.push(item);
     groups.set(titleKey, existing);

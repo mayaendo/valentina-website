@@ -1,5 +1,21 @@
 export type Lang = "en" | "es";
 
+const enBioTop = `<p>I am a recording engineer, producer, and songwriter originally both from Peru and Italy. Currently, I work as an Assistant Engineer at the renowned <a href="https://www.soldesants.com" target="_blank" rel="noopener noreferrer">Sol de Sants Studios</a> in Barcelona, under the mentorship of <a href="https://www.soldesants.com/the-team/" target="_blank" rel="noopener noreferrer">Alberto Perez</a>.</p>
+<p>I honed my craft as a sound engineer with <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/engineers/" target="_blank" rel="noopener noreferrer">Mikko Gordon</a>, <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/engineers/" target="_blank" rel="noopener noreferrer">Sean Woodlock</a>, and <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/engineers/" target="_blank" rel="noopener noreferrer">Nick Powell</a> at <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/" target="_blank" rel="noopener noreferrer">Goldsmiths Music Studios</a> in London, while also working as an Assistant Engineer at <a href="https://www.lightship95.com" target="_blank" rel="noopener noreferrer">Lightship95 Studios</a>. There, I began as an intern under <a href="https://www.lightship95.com/giles" target="_blank" rel="noopener noreferrer">Giles Barret</a> and <a href="https://www.lightship95.com/dave" target="_blank" rel="noopener noreferrer">Dave Holmes</a>, where I gained valuable experience with industry-standard engineering practices and developed the skills to navigate professional environments and commercial sessions with confidence.</p>
+<p>I have also contributed to projects at <a href="https://www.studiohighwater.co.uk" target="_blank" rel="noopener noreferrer">Studio Highwater</a>, <a href="https://zigzagrecording.com" target="_blank" rel="noopener noreferrer">ZigZag Studios</a> and <a href="https://www.instagram.com/alcanfores_/" target="_blank" rel="noopener noreferrer">Alcanfores Estudio</a>.</p>`;
+
+const enBioBottom = `<p>Over the years, I've been part of a wide variety of recording sessions, from large-scale live band setups to intimate acoustic projects. My deep connection with Jazz recordings, in particular, has shaped my approach to capturing the soul and authenticity of live performances.</p>
+<p>My musical background as a flautist playing Jazz and Classical music provides me with a versatile ear and a strong foundation for crafting compelling sonic landscapes. This has informed my work as both an engineer and a creative collaborator, allowing me to easily adapt to different genres and artistic visions.</p>
+<p>I've had the privilege of collaborating with incredible artists internationally, including <a href="https://open.spotify.com/artist/1XSmez9xyCCPpOZp0uImwM" target="_blank" rel="noopener noreferrer">Rita Payés</a>, <a href="https://open.spotify.com/artist/0ctjXj4AKsMtj6Tsm0JzSj" target="_blank" rel="noopener noreferrer">Shai Maestro</a>, <a href="https://open.spotify.com/artist/1Ol6gp3TzxunLVbg8GiOLZ" target="_blank" rel="noopener noreferrer">Brisa</a>, <a href="https://open.spotify.com/artist/05swzPCeWZMjApcUBYLyyi" target="_blank" rel="noopener noreferrer">Maya Endo</a>, <a href="https://open.spotify.com/artist/0rZ7WVov40lMe09hc7BXW0" target="_blank" rel="noopener noreferrer">Allexa Nava</a>, <a href="https://open.spotify.com/artist/34c3b95E9ZQPMPapPOv8RW" target="_blank" rel="noopener noreferrer">Hohnen Ford</a>, <a href="https://open.spotify.com/artist/5rCTkyHZUIUcPwKwIz8YOg" target="_blank" rel="noopener noreferrer">aron!</a>, and many others. Whether behind the console or in the songwriting process, I strive to bring each artist's unique vision to life and create music that resonates deeply.</p>`;
+
+const esBioTop = `<p>Soy ingeniera de grabación, productora y compositora, originalmente tanto de Perú como de Italia. Actualmente, trabajo como Ingeniera Asistente en el reconocido <a href="https://www.soldesants.com" target="_blank" rel="noopener noreferrer">Sol de Sants Studios</a> en Barcelona, bajo la mentoría de <a href="https://www.soldesants.com/the-team/" target="_blank" rel="noopener noreferrer">Alberto Perez</a>.</p>
+<p>Perfeccioné mi oficio como ingeniera de sonido con <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/engineers/" target="_blank" rel="noopener noreferrer">Mikko Gordon</a>, <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/engineers/" target="_blank" rel="noopener noreferrer">Sean Woodlock</a> y <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/engineers/" target="_blank" rel="noopener noreferrer">Nick Powell</a> en <a href="https://sites.gold.ac.uk/goldsmiths-music-studios/" target="_blank" rel="noopener noreferrer">Goldsmiths Music Studios</a> en Londres, mientras también trabajaba como Ingeniera Asistente en <a href="https://www.lightship95.com" target="_blank" rel="noopener noreferrer">Lightship95 Studios</a>. Allí, comencé como becaria bajo la supervisión de <a href="https://www.lightship95.com/giles" target="_blank" rel="noopener noreferrer">Giles Barret</a> y <a href="https://www.lightship95.com/dave" target="_blank" rel="noopener noreferrer">Dave Holmes</a>, donde adquirí una valiosa experiencia con las prácticas de ingeniería estándar de la industria y desarrollé las habilidades necesarias para desenvolverme con confianza en entornos profesionales y sesiones comerciales.</p>
+<p>También he contribuido a proyectos en <a href="https://www.studiohighwater.co.uk" target="_blank" rel="noopener noreferrer">Studio Highwater</a>, <a href="https://zigzagrecording.com" target="_blank" rel="noopener noreferrer">ZigZag Studios</a> y <a href="https://www.instagram.com/alcanfores_/" target="_blank" rel="noopener noreferrer">Alcanfores Estudio</a>.</p>`;
+
+const esBioBottom = `<p>A lo largo de los años, he participado en una gran variedad de sesiones de grabación, desde grandes formatos de banda en vivo hasta proyectos acústicos íntimos. Mi profunda conexión con las grabaciones de Jazz, en particular, ha dado forma a mi enfoque para capturar el alma y la autenticidad de las actuaciones en vivo.</p>
+<p>Mi formación musical como flautista de Jazz y música Clásica me proporciona un oído versátil y una sólida base para crear paisajes sonoros con carácter. Esto ha influido en mi trabajo tanto como ingeniera como colaboradora creativa, permitiéndome adaptarme fácilmente a diferentes géneros y visiones artísticas.</p>
+<p>He tenido el privilegio de colaborar con artistas increíbles a nivel internacional, entre ellos <a href="https://open.spotify.com/artist/1XSmez9xyCCPpOZp0uImwM" target="_blank" rel="noopener noreferrer">Rita Payés</a>, <a href="https://open.spotify.com/artist/0ctjXj4AKsMtj6Tsm0JzSj" target="_blank" rel="noopener noreferrer">Shai Maestro</a>, <a href="https://open.spotify.com/artist/1Ol6gp3TzxunLVbg8GiOLZ" target="_blank" rel="noopener noreferrer">Brisa</a>, <a href="https://open.spotify.com/artist/05swzPCeWZMjApcUBYLyyi" target="_blank" rel="noopener noreferrer">Maya Endo</a>, <a href="https://open.spotify.com/artist/0rZ7WVov40lMe09hc7BXW0" target="_blank" rel="noopener noreferrer">Allexa Nava</a>, <a href="https://open.spotify.com/artist/34c3b95E9ZQPMPapPOv8RW" target="_blank" rel="noopener noreferrer">Hohnen Ford</a>, <a href="https://open.spotify.com/artist/5rCTkyHZUIUcPwKwIz8YOg" target="_blank" rel="noopener noreferrer">aron!</a>, y muchos otros. Ya sea detrás de la consola o en el proceso de composición, me esfuerzo por dar vida a la visión única de cada artista y crear música que resuene profundamente.</p>`;
+
 export const translations = {
   en: {
     lang: "ES",
@@ -9,7 +25,9 @@ export const translations = {
       contact: "Contact",
     },
     hero: {
-      bio: "Valentina Caillaux is a recording engineer, producer, and songwriter with Peruvian and Italian roots. Currently working as Assistant Engineer at Sol de Sants Studios in Barcelona, under the mentorship of Alberto Perez. She honed her craft at Goldsmiths Music Studios in London alongside Mikko Gordon, Sean Woodlock, and Nick Powell, and as Assistant Engineer at Lightship95 Studios under Giles Barret and Dave Holmes. Her deep connection with Jazz recordings and her background as a classical and jazz flautist inform her approach to capturing the soul of live performances. She has collaborated internationally with artists including Rita Payés, Shai Maestro, Brisa, Maya Endo, Allexa Nava, Hohnen Ford, and aron!",
+      bioTop: enBioTop,
+      bioBottom: enBioBottom,
+      cvBtn: "Take a look at my CV",
     },
     carousels: {
       engProd: "Engineer & production credits",
@@ -30,7 +48,9 @@ export const translations = {
       contact: "Contacto",
     },
     hero: {
-      bio: "Valentina Caillaux es ingeniera de grabación, productora y compositora con raíces peruanas e italianas. Actualmente trabaja como Ingeniera Asistente en Sol de Sants Studios en Barcelona, bajo la mentoría de Alberto Perez. Perfeccionó su oficio en Goldsmiths Music Studios en Londres junto a Mikko Gordon, Sean Woodlock y Nick Powell, y como Ingeniera Asistente en Lightship95 Studios bajo la dirección de Giles Barret y Dave Holmes. Su profunda conexión con las grabaciones de Jazz y su trayectoria como flautista clásica y de jazz informan su enfoque para capturar el alma de las actuaciones en vivo. Ha colaborado internacionalmente con artistas como Rita Payés, Shai Maestro, Brisa, Maya Endo, Allexa Nava, Hohnen Ford y aron!",
+      bioTop: esBioTop,
+      bioBottom: esBioBottom,
+      cvBtn: "Mira mi CV",
     },
     carousels: {
       engProd: "Créditos de ingeniería y producción",
@@ -40,7 +60,7 @@ export const translations = {
       ae: "Créditos de ingeniero/a asistente",
     },
     contact: {
-      heading: "Escríbeme",
+      heading: "Contáctame",
     },
   },
 } as const;

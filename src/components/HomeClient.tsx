@@ -4,7 +4,6 @@ import { useState } from "react";
 import { CreditCarousel } from "./CreditCarousel";
 import { FadeIn } from "./FadeIn";
 import { SocialIcons } from "./SocialIcons";
-import { Waveform } from "./Waveform";
 import type { CarouselBlock } from "@/data/credits";
 import { translations, type Lang } from "@/lib/i18n";
 
@@ -44,16 +43,38 @@ export function HomeClient({ carousels }: Props) {
       <main>
         {/* ——— Hero ——— */}
         <section id="home" className="hero">
-          <h1 className="hero__name">
-            <span className="hero__line">VALENTINA</span>
-            <span className="hero__line">CAILLAUX</span>
-          </h1>
-
-          <Waveform />
-
-          <div className="hero__bio">
-            <p>{t.hero.bio}</p>
+          <div className="hero__top">
+            <h1 className="hero__name">
+              <span className="hero__line">VALENTINA</span>
+              <span className="hero__line">CAILLAUX</span>
+            </h1>
+            <div className="hero__portrait">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/val-image-hero-section.png"
+                alt="Valentina Caillaux"
+              />
+            </div>
           </div>
+
+          <div
+            className="hero__bio"
+            dangerouslySetInnerHTML={{ __html: t.hero.bioTop }}
+          />
+
+          <a
+            href="https://pdflink.to/valentinacaillauxcv/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hero__cv-btn"
+          >
+            {t.hero.cvBtn}
+          </a>
+
+          <div
+            className="hero__bio"
+            dangerouslySetInnerHTML={{ __html: t.hero.bioBottom }}
+          />
         </section>
 
         {/* ——— Credit Carousels ——— */}

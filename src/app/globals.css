@@ -14,15 +14,15 @@
   --carousel-pad: clamp(1.25rem, 4vw, 3rem);
   --carousel-gap: 1.5rem;
   --card-width: clamp(
-    200px,
-    calc((100vw - 2 * var(--carousel-pad) - 3 * var(--carousel-gap)) / 4),
-    260px
+    240px,
+    calc((100vw - 3 * var(--carousel-gap)) / 4),
+    480px
   );
 }
 
 @media (max-width: 768px) {
   :root {
-    --card-width: calc((100vw - 2 * var(--carousel-pad) - var(--carousel-gap)) / 1.3);
+    --card-width: calc((100vw - var(--carousel-gap)) / 1.3);
   }
 }
 
@@ -78,15 +78,23 @@ body {
   gap: 0.5rem;
 }
 
-.section-label,
 .nav a,
 .nav__sep {
   font-family: var(--font-display), system-ui, sans-serif;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--gray-label);
+}
+
+.section-label {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gray-meta);
 }
 
 .nav a {
@@ -123,7 +131,7 @@ body {
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  transition: opacity 0.2s ease;
+  border-radius: 0;
 }
 
 .social-btn:hover,
@@ -133,14 +141,10 @@ body {
 }
 
 .social-btn--ig {
-  background: #6b0020;
-  color: var(--white);
+  background: var(--glacier);
+  color: var(--black);
 }
 
-.social-btn--sp {
-  background: #afa857;
-  color: var(--white);
-}
 
 .social-btn--lg {
   width: 40px;
@@ -149,18 +153,24 @@ body {
 
 .lang-toggle {
   appearance: none;
-  background: #3a7a9c;
-  border: 1px solid #3a7a9c;
-  padding: 0.2rem 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #afa857;
+  border: none;
+  border-radius: 0;
   font-family: var(--font-display), system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.22em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--white);
+  color: var(--black);
   cursor: pointer;
   transition: opacity 0.2s ease;
-  line-height: 1.6;
+  line-height: 1;
+  padding: 0;
 }
 
 .lang-toggle:hover,
@@ -189,11 +199,43 @@ body {
   align-items: center;
   justify-content: center;
   padding: calc(var(--nav-pad-top) + 2rem) clamp(1.25rem, 5vw, 4rem) 4rem;
-  text-align: center;
+}
+
+.hero__top {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.hero__portrait {
+  flex: 0 0 clamp(220px, 40vw, 560px);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.hero__portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .hero__top {
+    flex-direction: column;
+  }
+  .hero__portrait {
+    width: 100%;
+    flex: none;
+    aspect-ratio: 4 / 3;
+  }
 }
 
 .hero__name {
-  margin: 0 0 2.5rem;
+  flex: 1;
+  margin: 0;
   padding: 0;
   font-family: var(--font-display), system-ui, sans-serif;
   font-weight: 700;
@@ -203,6 +245,7 @@ body {
   text-transform: uppercase;
   color: var(--black);
   max-width: 100%;
+  text-align: left;
 }
 
 .hero__line {
@@ -216,27 +259,64 @@ body {
   }
 }
 
-.hero__wave {
-  margin-bottom: 2.75rem;
+
+.hero__cv-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.75rem;
+  padding: 0.65rem 2rem;
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--white);
+  background: var(--guinda);
+  border: 1px solid var(--guinda);
+  transition: opacity 0.2s ease;
 }
 
-.waveform-svg {
-  width: clamp(72px, 18vw, 120px);
-  height: auto;
-  display: block;
+.hero__cv-btn:hover,
+.hero__cv-btn:focus-visible {
+  opacity: 0.6;
+  outline: none;
 }
 
 .hero__bio {
-  max-width: 38rem;
+  max-width: 52rem;
   margin: 0 auto 2rem;
+  text-align: left;
 }
 
 .hero__bio p {
-  margin: 0;
+  margin: 0 0 1.25rem;
   font-size: 16px;
   font-weight: 600;
   line-height: 1.75;
   color: var(--black);
+}
+
+.hero__bio p:last-child {
+  margin-bottom: 0;
+}
+
+.hero__bio a {
+  color: var(--gray-label);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--gray-label);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+}
+
+.hero__bio a:hover,
+.hero__bio a:focus-visible {
+  color: var(--guinda);
+  text-decoration-color: var(--guinda);
+  outline: none;
 }
 
 /* credit-key removed */
@@ -247,9 +327,9 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.hero__name  { animation: heroFadeUp 1s   ease both; }
-.hero__wave  { animation: heroFadeUp 0.9s ease 0.25s both; }
-.hero__bio   { animation: heroFadeUp 0.9s ease 0.45s both; }
+.hero__name   { animation: heroFadeUp 1s   ease both; }
+.hero__bio    { animation: heroFadeUp 0.9s ease 0.3s both; }
+.hero__cv-btn { animation: heroFadeUp 0.9s ease 0.5s both; }
 
 .fade-in-wrapper {
   opacity: 0;
@@ -264,7 +344,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .hero__name,
-  .hero__wave,
+  .hero__cv-btn,
   .hero__bio {
     animation: none;
   }
@@ -312,7 +392,7 @@ body {
   gap: var(--carousel-gap);
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0 var(--carousel-pad) 0.5rem;
+  padding: 0 0 0.5rem;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
@@ -359,32 +439,32 @@ body {
 .credit-card__artist {
   margin: 1rem 0 0.35rem;
   font-family: var(--font-display), system-ui, sans-serif;
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.02em;
   color: var(--black);
-  text-align: left;
+  text-align: center;
 }
 
 .credit-card__meta {
   margin: 0 0 0.2rem;
   font-family: var(--font-body), "Cormorant Garamond", serif;
-  font-size: 13px;
-  font-weight: 400;
+  font-size: 15px;
+  font-weight: 500;
   line-height: 1.45;
   color: var(--gray-meta);
-  text-align: left;
+  text-align: center;
 }
 
 .credit-card__label {
   margin: 0;
   font-family: var(--font-body), "Cormorant Garamond", serif;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
   line-height: 1.4;
-  color: var(--gray-light);
-  text-align: left;
+  color: var(--gray-meta);
+  text-align: center;
 }
 
 /* ——— Contact ——— */
@@ -407,7 +487,7 @@ body {
 .contact__email {
   margin: 0 0 2rem;
   font-family: var(--font-body), "Cormorant Garamond", serif;
-  font-size: 16px;
+  font-size: 22px;
 }
 
 .contact__email a {
