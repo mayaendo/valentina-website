@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ContactForm } from "./ContactForm";
 import { CreditCarousel } from "./CreditCarousel";
 import { FadeIn } from "./FadeIn";
 import { SocialIcons } from "./SocialIcons";
@@ -51,7 +52,7 @@ export function HomeClient({ carousels }: Props) {
             <div className="hero__portrait">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/val-image-hero-section.png"
+                src="/val-image-hero-section-v2.jpeg"
                 alt="Valentina Caillaux"
               />
             </div>
@@ -96,6 +97,12 @@ export function HomeClient({ carousels }: Props) {
             <p className="contact__email">
               <a href="mailto:valentinacxzu@gmail.com">valentinacxzu@gmail.com</a>
             </p>
+            <ContactForm
+              messages={{
+                ...t.contact.form,
+                errors: { ...t.contact.form.errors },
+              }}
+            />
             <div className="contact__social">
               <SocialIcons size="md" />
             </div>
