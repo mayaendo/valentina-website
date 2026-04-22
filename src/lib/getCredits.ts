@@ -2,19 +2,26 @@
  * Fetches portfolio credits from a public Google Sheet (CSV export).
  *
  * Expected columns (row 1 = headers):
- *   Section | Artist | Title | Format | Role | Label | Music URL | Artwork URL
+ *   Section | Artist | Title | Format | Role | Label | Music URL | Video URL | Artwork URL
+ *
+ * "Video URL" is optional. Use it for YouTube (watch, youtu.be, Shorts, embed). It may
+ * sit several columns away from "Music URL"; blank column headers are handled safely.
  *
  * Section values (case-insensitive):
  *   Engineer & Production | Engineer | Mix Engineer | Songwriter | Assistant Engineer
  *
- * If "Artwork URL" is blank but "Music URL" is a Spotify link, artwork is
- * fetched automatically from the Spotify Web API using client credentials.
- * Requires SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env.local.
+ * Artwork resolution: (1) Artwork URL, (2) Spotify album art from Music URL if Spotify,
+ * (3) YouTube thumbnail from Video URL or from Music URL if that cell is YouTube-only.
+ * Spotify API requires SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET in .env.local.
  */
 
 import Papa from "papaparse";
 import type { CarouselBlock, CreditItem } from "@/data/credits";
 import type { CarouselTitleKey } from "@/lib/i18n";
+import {
+  parseYouTubeVideoId,
+  youtubeThumbnailUrl,
+} from "@/lib/youtube";
 
 // ——— Spotify helpers ———
 
@@ -157,6 +164,18 @@ const TITLE_KEY_TO_ID: Record<CarouselTitleKey, string> = {
   ae: "ae",
 };
 
+/** Spotify / other audio cards first; YouTube-only rows (video, no music URL) last. */
+function isYoutubeOnlyCredit(item: CreditItem): boolean {
+  const v = item.videoUrl;
+  return Boolean(v && parseYouTubeVideoId(v) && !item.musicUrl);
+}
+
+function sortCreditsForDisplay(items: CreditItem[]): CreditItem[] {
+  return [...items].sort(
+    (a, b) => Number(isYoutubeOnlyCredit(a)) - Number(isYoutubeOnlyCredit(b)),
+  );
+}
+
 type SheetRow = {
   Section: string;
   Artist: string;
@@ -165,8 +184,18 @@ type SheetRow = {
   Role: string;
   Label: string;
   "Music URL": string;
+  /** Optional column — omit in old sheets until you add the header. */
+  "Video URL"?: string;
   "Artwork URL": string;
 };
+
+function isSpotifyUrl(url: string): boolean {
+  try {
+    return new URL(url).hostname.includes("spotify.com");
+  } catch {
+    return false;
+  }
+}
 
 function buildReleaseLine(row: SheetRow): string {
   const fmt = row.Format?.trim();
@@ -216,6 +245,12 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
   const { data, errors } = Papa.parse<SheetRow>(csvText, {
     header: true,
     skipEmptyLines: true,
+    // Blank header cells (e.g. empty cols between "Music URL" and "Video URL") become
+    // duplicate "" keys and break column alignment — give each column a unique name.
+    transformHeader(header, index) {
+      const h = header.trim();
+      return h || `__blank_${index}`;
+    },
   });
 
   if (errors.length > 0) {
@@ -230,7 +265,21 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
       if (!titleKey) return null;
 
       const manualArtwork = row["Artwork URL"]?.trim();
-      const musicUrl = row["Music URL"]?.trim() || undefined;
+      const musicRaw = row["Music URL"]?.trim() || "";
+      const videoRaw = row["Video URL"]?.trim() || "";
+
+      let musicUrl: string | undefined;
+      let videoUrl: string | undefined;
+      if (musicRaw && isSpotifyUrl(musicRaw)) {
+        musicUrl = musicRaw;
+      } else if (musicRaw && parseYouTubeVideoId(musicRaw)) {
+        videoUrl = musicRaw;
+      } else if (musicRaw) {
+        musicUrl = musicRaw;
+      }
+      if (videoRaw && parseYouTubeVideoId(videoRaw)) {
+        videoUrl = videoRaw;
+      }
 
       let artworkUrl: string | undefined;
       if (manualArtwork) {
@@ -238,12 +287,21 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
       } else if (musicUrl) {
         artworkUrl = await getSpotifyArtwork(musicUrl);
       }
+      if (!artworkUrl) {
+        const ytId =
+          parseYouTubeVideoId(videoUrl ?? "") ||
+          parseYouTubeVideoId(musicRaw);
+        if (ytId) {
+          artworkUrl = youtubeThumbnailUrl(ytId);
+        }
+      }
 
       const item: CreditItem = {
         artist: row.Artist?.trim() ?? "",
         releaseLine: buildReleaseLine(row),
         label: row.Label?.trim() || "—",
         musicUrl,
+        videoUrl,
         artworkUrl,
       };
 
@@ -267,7 +325,11 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
   for (const key of SECTION_ORDER) {
     const items = groups.get(key);
     if (items && items.length > 0) {
-      result.push({ id: TITLE_KEY_TO_ID[key], titleKey: key, items });
+      result.push({
+        id: TITLE_KEY_TO_ID[key],
+        titleKey: key,
+        items: sortCreditsForDisplay(items),
+      });
     }
   }
 

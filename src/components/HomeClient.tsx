@@ -85,6 +85,7 @@ export function HomeClient({ carousels }: Props) {
               <CreditCarousel
                 title={t.carousels[block.titleKey]}
                 items={block.items}
+                watchYoutubeLabel={t.creditsUi.watchYoutube}
               />
             </FadeIn>
           ))}

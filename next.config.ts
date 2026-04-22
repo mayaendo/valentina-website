@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
       },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
+      },
       // Catch-all for any other hosted artwork URLs (Dropbox, Cloudinary, etc.)
       {
         protocol: "https",
