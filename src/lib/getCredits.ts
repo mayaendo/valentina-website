@@ -20,6 +20,17 @@ import type { CarouselTitleKey } from "@/lib/i18n";
 
 let spotifyTokenCache: { token: string; expiresAt: number } | null = null;
 
+/** One Spotify Web API request at a time to avoid 429 from parallel track fetches. */
+let spotifyArtworkQueue: Promise<unknown> = Promise.resolve();
+
+function enqueueSpotifyArtworkTask<T>(task: () => Promise<T>): Promise<T> {
+  const spacing = () =>
+    new Promise<void>((r) => setTimeout(r, 80));
+  const run = spotifyArtworkQueue.then(() => task());
+  spotifyArtworkQueue = run.then(spacing, spacing);
+  return run;
+}
+
 async function getSpotifyToken(): Promise<string | null> {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -75,32 +86,51 @@ async function getSpotifyArtwork(musicUrl: string): Promise<string | undefined> 
   const parsed = parseSpotifyUrl(musicUrl);
   if (!parsed) return undefined;
 
-  const token = await getSpotifyToken();
-  if (!token) return undefined;
+  return enqueueSpotifyArtworkTask(async () => {
+    const token = await getSpotifyToken();
+    if (!token) return undefined;
 
-  // Tracks → use album images. Albums/singles/EPs → use album images directly.
-  const endpoint =
-    parsed.type === "track"
-      ? `https://api.spotify.com/v1/tracks/${parsed.id}`
-      : `https://api.spotify.com/v1/${parsed.type}s/${parsed.id}`;
+    // Tracks → use album images. Albums/singles/EPs → use album images directly.
+    const endpoint =
+      parsed.type === "track"
+        ? `https://api.spotify.com/v1/tracks/${parsed.id}`
+        : `https://api.spotify.com/v1/${parsed.type}s/${parsed.id}`;
 
-  try {
-    const res = await fetch(endpoint, {
-      headers: { Authorization: `Bearer ${token}` },
-      next: { revalidate: 86400 }, // cache artwork for 24 h
-    });
-    if (!res.ok) throw new Error(`Spotify API ${res.status}`);
-    const json = await res.json() as {
-      images?: { url: string }[];
-      album?: { images?: { url: string }[] };
-    };
-    const images =
-      json.images ?? json.album?.images ?? [];
-    return (images[0] as { url: string } | undefined)?.url;
-  } catch (err) {
-    console.error(`[Spotify] Could not fetch artwork for ${musicUrl}`, err);
-    return undefined;
-  }
+    const maxAttempts = 4;
+    let res: Response | undefined;
+
+    try {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        res = await fetch(endpoint, {
+          headers: { Authorization: `Bearer ${token}` },
+          next: { revalidate: 86400 }, // cache artwork for 24 h
+        });
+        if (res.ok) break;
+        if (res.status === 429 && attempt < maxAttempts - 1) {
+          const retryAfter = res.headers.get("Retry-After");
+          const sec = retryAfter ? Number.parseFloat(retryAfter) : Number.NaN;
+          const waitMs = Number.isFinite(sec)
+            ? Math.min(60_000, Math.max(500, sec * 1000))
+            : 1000 * (attempt + 1);
+          await new Promise((r) => setTimeout(r, waitMs));
+          continue;
+        }
+        // 404 / other errors: skip quietly (no throw → no Next.js console error overlay)
+        return undefined;
+      }
+
+      if (!res?.ok) return undefined;
+
+      const json = (await res.json()) as {
+        images?: { url: string }[];
+        album?: { images?: { url: string }[] };
+      };
+      const images = json.images ?? json.album?.images ?? [];
+      return (images[0] as { url: string } | undefined)?.url;
+    } catch {
+      return undefined;
+    }
+  });
 }
 
 const SECTION_MAP: Record<string, CarouselTitleKey> = {

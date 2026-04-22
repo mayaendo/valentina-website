@@ -1,5 +1,6 @@
 "use client";
 
+import emailjs from "@emailjs/browser";
 import { useState } from "react";
 
 type ErrorCode =
@@ -7,11 +8,8 @@ type ErrorCode =
   | "invalid_email"
   | "invalid_country"
   | "invalid_message"
-  | "invalid_fields"
-  | "invalid_json"
   | "send_failed"
-  | "not_configured"
-  | "from_not_configured";
+  | "not_configured";
 
 export type ContactFormMessages = {
   nameLabel: string;
@@ -29,6 +27,42 @@ type Props = {
   messages: ContactFormMessages;
 };
 
+const MAX_NAME = 120;
+const MAX_EMAIL = 254;
+const MAX_COUNTRY = 80;
+const MIN_COUNTRY = 2;
+const MAX_MESSAGE = 5000;
+const MIN_MESSAGE = 10;
+
+function isValidEmail(s: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+}
+
+function validateFields(
+  nameTrim: string,
+  emailTrim: string,
+  countryTrim: string,
+  messageTrim: string,
+): ErrorCode | null {
+  if (!nameTrim || nameTrim.length > MAX_NAME) return "invalid_name";
+  if (!emailTrim || emailTrim.length > MAX_EMAIL || !isValidEmail(emailTrim)) {
+    return "invalid_email";
+  }
+  if (
+    countryTrim.length < MIN_COUNTRY ||
+    countryTrim.length > MAX_COUNTRY
+  ) {
+    return "invalid_country";
+  }
+  if (
+    messageTrim.length < MIN_MESSAGE ||
+    messageTrim.length > MAX_MESSAGE
+  ) {
+    return "invalid_message";
+  }
+  return null;
+}
+
 export function ContactForm({ messages: t }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,37 +79,67 @@ export function ContactForm({ messages: t }: Props) {
     setStatus("sending");
     setErrorCode(null);
 
+    if (honeypot.trim() !== "") {
+      setStatus("success");
+      setName("");
+      setEmail("");
+      setCountry("");
+      setMessage("");
+      return;
+    }
+
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID?.trim() ?? "";
+    const templateId =
+      process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID?.trim() ?? "";
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY?.trim() ?? "";
+
+    if (!serviceId || !templateId || !publicKey) {
+      setStatus("error");
+      setErrorCode("not_configured");
+      return;
+    }
+
+    const nameTrim = name.trim();
+    const emailTrim = email.trim();
+    const countryTrim = country.trim();
+    const messageTrim = message.trim();
+
+    const validationError = validateFields(
+      nameTrim,
+      emailTrim,
+      countryTrim,
+      messageTrim,
+    );
+    if (validationError) {
+      setStatus("error");
+      setErrorCode(validationError);
+      return;
+    }
+
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          country,
-          message,
-          website: honeypot,
-        }),
-      });
+      const result = await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          name: nameTrim,
+          email: emailTrim,
+          country: countryTrim,
+          message: messageTrim,
+        },
+        { publicKey },
+      );
 
-      const data = (await res.json()) as { ok?: boolean; error?: string };
-
-      if (res.ok && data.ok) {
-        setStatus("success");
-        setName("");
-        setEmail("");
-        setCountry("");
-        setMessage("");
+      if (result.status !== 200) {
+        setStatus("error");
+        setErrorCode("send_failed");
         return;
       }
 
-      setStatus("error");
-      const code = data.error as ErrorCode | undefined;
-      if (code && code in t.errors) {
-        setErrorCode(code);
-      } else {
-        setErrorCode("send_failed");
-      }
+      setStatus("success");
+      setName("");
+      setEmail("");
+      setCountry("");
+      setMessage("");
     } catch {
       setStatus("error");
       setErrorCode("send_failed");
