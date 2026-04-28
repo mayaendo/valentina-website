@@ -15,12 +15,22 @@ const fontBody = Cormorant_Garamond({
   style: ["normal", "italic"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ??
+  "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Valentina Caillaux — Recording Engineer, Producer, Songwriter",
   description:
     "Valentina Caillaux — recording engineer, producer, and songwriter based in Barcelona.",
   icons: {
-    icon: "/icono-web-val.jpeg",
+    icon: [
+      { url: "/icono-web-val.png", type: "image/png", sizes: "any" },
+    ],
+    shortcut: "/icono-web-val.png",
+    apple: [{ url: "/icono-web-val.png", type: "image/png", sizes: "180x180" }],
   },
 };
 

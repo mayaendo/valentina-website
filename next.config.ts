@@ -26,6 +26,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  /** Browsers often request /favicon.ico before parsing HTML; serve the PNG there too. */
+  async rewrites() {
+    return [
+      {
+        source: "/favicon.ico",
+        destination: "/icono-web-val.png",
+      },
+    ];
+  },
 };
 
 export default nextConfig;
