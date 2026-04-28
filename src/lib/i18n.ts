@@ -38,6 +38,8 @@ export const translations = {
     },
     creditsUi: {
       watchYoutube: "Watch on YouTube",
+      loadingCredits: "Loading credits…",
+      creditsError: "Credits could not be loaded. Refresh the page or try again later.",
     },
     contact: {
       heading: "Get in touch",
@@ -83,6 +85,8 @@ export const translations = {
     },
     creditsUi: {
       watchYoutube: "Ver en YouTube",
+      loadingCredits: "Cargando créditos…",
+      creditsError: "No se pudieron cargar los créditos. Actualiza la página o vuelve a intentarlo.",
     },
     contact: {
       heading: "Contáctame",

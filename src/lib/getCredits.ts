@@ -27,15 +27,31 @@ import {
 
 let spotifyTokenCache: { token: string; expiresAt: number } | null = null;
 
-/** One Spotify Web API request at a time to avoid 429 from parallel track fetches. */
-let spotifyArtworkQueue: Promise<unknown> = Promise.resolve();
+/** Process rows in parallel with a low cap to stay fast on Vercel while limiting Spotify 429s. */
+const _conc = Number.parseInt(process.env.SPOTIFY_ARTWORK_CONCURRENCY ?? "", 10);
+const SPOTIFY_ROW_CONCURRENCY = Number.isFinite(_conc)
+  ? Math.min(8, Math.max(2, _conc))
+  : 5;
 
-function enqueueSpotifyArtworkTask<T>(task: () => Promise<T>): Promise<T> {
-  const spacing = () =>
-    new Promise<void>((r) => setTimeout(r, 80));
-  const run = spotifyArtworkQueue.then(() => task());
-  spotifyArtworkQueue = run.then(spacing, spacing);
-  return run;
+async function mapPool<T, R>(
+  items: T[],
+  poolSize: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function worker(): Promise<void> {
+    while (true) {
+      const i = nextIndex++;
+      if (i >= items.length) return;
+      results[i] = await mapper(items[i], i);
+    }
+  }
+
+  const n = Math.min(Math.max(1, poolSize), items.length);
+  await Promise.all(Array.from({ length: n }, () => worker()));
+  return results;
 }
 
 async function getSpotifyToken(): Promise<string | null> {
@@ -56,7 +72,10 @@ async function getSpotifyToken(): Promise<string | null> {
         Authorization: `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
       },
       body: "grant_type=client_credentials",
-      cache: "no-store",
+      // Production: cache token so the route can stay within Vercel time limits (Hobby ~10s).
+      ...(process.env.NODE_ENV === "development"
+        ? { cache: "no-store" as const }
+        : { next: { revalidate: 3500 } }),
     });
     if (!res.ok) throw new Error(`Spotify token fetch failed: ${res.status}`);
     const json = await res.json() as { access_token: string; expires_in: number };
@@ -93,51 +112,48 @@ async function getSpotifyArtwork(musicUrl: string): Promise<string | undefined> 
   const parsed = parseSpotifyUrl(musicUrl);
   if (!parsed) return undefined;
 
-  return enqueueSpotifyArtworkTask(async () => {
-    const token = await getSpotifyToken();
-    if (!token) return undefined;
+  const token = await getSpotifyToken();
+  if (!token) return undefined;
 
-    // Tracks → use album images. Albums/singles/EPs → use album images directly.
-    const endpoint =
-      parsed.type === "track"
-        ? `https://api.spotify.com/v1/tracks/${parsed.id}`
-        : `https://api.spotify.com/v1/${parsed.type}s/${parsed.id}`;
+  // Tracks → use album images. Albums/singles/EPs → use album images directly.
+  const endpoint =
+    parsed.type === "track"
+      ? `https://api.spotify.com/v1/tracks/${parsed.id}`
+      : `https://api.spotify.com/v1/${parsed.type}s/${parsed.id}`;
 
-    const maxAttempts = 4;
-    let res: Response | undefined;
+  const maxAttempts = 4;
+  let res: Response | undefined;
 
-    try {
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        res = await fetch(endpoint, {
-          headers: { Authorization: `Bearer ${token}` },
-          next: { revalidate: 86400 }, // cache artwork for 24 h
-        });
-        if (res.ok) break;
-        if (res.status === 429 && attempt < maxAttempts - 1) {
-          const retryAfter = res.headers.get("Retry-After");
-          const sec = retryAfter ? Number.parseFloat(retryAfter) : Number.NaN;
-          const waitMs = Number.isFinite(sec)
-            ? Math.min(60_000, Math.max(500, sec * 1000))
-            : 1000 * (attempt + 1);
-          await new Promise((r) => setTimeout(r, waitMs));
-          continue;
-        }
-        // 404 / other errors: skip quietly (no throw → no Next.js console error overlay)
-        return undefined;
+  try {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      res = await fetch(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+        next: { revalidate: 86400 }, // cache artwork for 24 h
+      });
+      if (res.ok) break;
+      if (res.status === 429 && attempt < maxAttempts - 1) {
+        const retryAfter = res.headers.get("Retry-After");
+        const sec = retryAfter ? Number.parseFloat(retryAfter) : Number.NaN;
+        const waitMs = Number.isFinite(sec)
+          ? Math.min(60_000, Math.max(500, sec * 1000))
+          : 1000 * (attempt + 1);
+        await new Promise((r) => setTimeout(r, waitMs));
+        continue;
       }
-
-      if (!res?.ok) return undefined;
-
-      const json = (await res.json()) as {
-        images?: { url: string }[];
-        album?: { images?: { url: string }[] };
-      };
-      const images = json.images ?? json.album?.images ?? [];
-      return (images[0] as { url: string } | undefined)?.url;
-    } catch {
       return undefined;
     }
-  });
+
+    if (!res?.ok) return undefined;
+
+    const json = (await res.json()) as {
+      images?: { url: string }[];
+      album?: { images?: { url: string }[] };
+    };
+    const images = json.images ?? json.album?.images ?? [];
+    return (images[0] as { url: string } | undefined)?.url;
+  } catch {
+    return undefined;
+  }
 }
 
 const SECTION_MAP: Record<string, CarouselTitleKey> = {
@@ -216,6 +232,28 @@ function normalizeGDriveUrl(raw: string): string {
   return raw;
 }
 
+/**
+ * Public Spotify oEmbed (no client id). Used when the Web API cannot return
+ * cover art (missing env, 429, etc.); thumbnail is usually 300×300.
+ */
+async function getSpotifyOEmbedThumbnail(
+  musicUrl: string,
+): Promise<string | undefined> {
+  if (!isSpotifyUrl(musicUrl)) return undefined;
+  try {
+    const oembed = new URL("https://open.spotify.com/oembed");
+    oembed.searchParams.set("url", musicUrl);
+    const res = await fetch(oembed.toString(), {
+      next: { revalidate: 86_400 },
+    });
+    if (!res.ok) return undefined;
+    const json = (await res.json()) as { thumbnail_url?: string };
+    return json.thumbnail_url;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function getCarousels(): Promise<CarouselBlock[]> {
   const sheetId = process.env.GOOGLE_SHEET_ID;
 
@@ -257,9 +295,11 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
     console.warn("[getCarousels] CSV parse warnings:", errors);
   }
 
-  // Resolve artwork for all rows in parallel
-  const resolvedItems = await Promise.all(
-    data.map(async (row) => {
+  // Resolve artwork with bounded concurrency (serial queue was too slow for Vercel timeouts).
+  const resolvedItems = await mapPool(
+    data,
+    SPOTIFY_ROW_CONCURRENCY,
+    async (row) => {
       const sectionRaw = row.Section?.trim().toLowerCase();
       const titleKey = SECTION_MAP[sectionRaw];
       if (!titleKey) return null;
@@ -286,6 +326,9 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
         artworkUrl = normalizeGDriveUrl(manualArtwork);
       } else if (musicUrl) {
         artworkUrl = await getSpotifyArtwork(musicUrl);
+        if (!artworkUrl && isSpotifyUrl(musicUrl)) {
+          artworkUrl = await getSpotifyOEmbedThumbnail(musicUrl);
+        }
       }
       if (!artworkUrl) {
         const ytId =
@@ -306,7 +349,7 @@ export async function getCarousels(): Promise<CarouselBlock[]> {
       };
 
       return { titleKey, item };
-    })
+    },
   );
 
   // Group rows by section

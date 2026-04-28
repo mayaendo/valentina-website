@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { ContactForm } from "./ContactForm";
 import { CreditCarousel } from "./CreditCarousel";
 import { FadeIn } from "./FadeIn";
@@ -8,13 +8,79 @@ import { SocialIcons } from "./SocialIcons";
 import type { CarouselBlock } from "@/data/credits";
 import { translations, type Lang } from "@/lib/i18n";
 
-type Props = {
-  carousels: CarouselBlock[];
-};
+const CREDITS_SESSION_KEY = "valentina_credits_cache_v1";
+/** Slightly under server revalidate (300) so a later visit refreshes in background */
+const CLIENT_CACHE_MS = 4 * 60 * 1000;
 
-export function HomeClient({ carousels }: Props) {
+type SessionPayload = { savedAt: number; blocks: CarouselBlock[] };
+
+function readSessionCredits(): CarouselBlock[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(CREDITS_SESSION_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as SessionPayload;
+    if (Date.now() - p.savedAt > CLIENT_CACHE_MS) return null;
+    if (!Array.isArray(p.blocks)) return null;
+    return p.blocks;
+  } catch {
+    return null;
+  }
+}
+
+function writeSessionCredits(blocks: CarouselBlock[]) {
+  try {
+    const payload: SessionPayload = { savedAt: Date.now(), blocks };
+    sessionStorage.setItem(CREDITS_SESSION_KEY, JSON.stringify(payload));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+export function HomeClient() {
   const [lang, setLang] = useState<Lang>("en");
+  const [credits, setCredits] = useState<{
+    data: CarouselBlock[] | null;
+    error: boolean;
+  }>({ data: null, error: false });
   const t = translations[lang];
+
+  useLayoutEffect(() => {
+    const cached = readSessionCredits();
+    if (cached) {
+      setCredits({ data: cached, error: false });
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/credits")
+      .then((res) => {
+        if (!res.ok) throw new Error("credits");
+        return res.json() as Promise<CarouselBlock[]>;
+      })
+      .then((blocks) => {
+        if (cancelled) return;
+        setCredits({ data: blocks, error: false });
+        writeSessionCredits(blocks);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setCredits((prev) => {
+          if (prev.data) {
+            return { data: prev.data, error: false };
+          }
+          return { data: null, error: true };
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { data, error: creditsError } = credits;
+  const creditsLoading = data === null && !creditsError;
+  const creditsFailedHard = data === null && creditsError;
 
   return (
     <>
@@ -78,17 +144,29 @@ export function HomeClient({ carousels }: Props) {
           />
         </section>
 
-        {/* ——— Credit Carousels ——— */}
+        {/* ——— Credit Carousels (after first paint, via /api + cache) ——— */}
         <section id="credits" className="credits">
-          {carousels.map((block, i) => (
-            <FadeIn key={block.id} delay={i * 80}>
-              <CreditCarousel
-                title={t.carousels[block.titleKey]}
-                items={block.items}
-                watchYoutubeLabel={t.creditsUi.watchYoutube}
-              />
-            </FadeIn>
-          ))}
+          {creditsFailedHard && (
+            <p className="credits__status credits__status--error" role="alert">
+              {t.creditsUi.creditsError}
+            </p>
+          )}
+          {creditsLoading && (
+            <p className="credits__status" aria-live="polite">
+              {t.creditsUi.loadingCredits}
+            </p>
+          )}
+          {data
+            ? data.map((block, i) => (
+                <FadeIn key={block.id} delay={i * 80}>
+                  <CreditCarousel
+                    title={t.carousels[block.titleKey]}
+                    items={block.items}
+                    watchYoutubeLabel={t.creditsUi.watchYoutube}
+                  />
+                </FadeIn>
+              ))
+            : null}
         </section>
 
         {/* ——— Contact ——— */}

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { CreditItem } from "@/data/credits";
 import {
   parseYouTubeVideoId,
@@ -100,13 +99,14 @@ function CardArt({
   if (artworkUrl) {
     return (
       <div className="credit-card__art credit-card__art--img">
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element -- many CDNs (Spotify, Drive, YT) */}
+        <img
           src={artworkUrl}
           alt={`Artwork for ${artist}`}
-          fill
-          sizes="260px"
           className="credit-card__img"
-          unoptimized
+          loading="lazy"
+          sizes="(max-width: 768px) 45vw, 260px"
+          decoding="async"
         />
       </div>
     );
