@@ -19,6 +19,9 @@ export const metadata: Metadata = {
   title: "Valentina Caillaux — Recording Engineer, Producer, Songwriter",
   description:
     "Valentina Caillaux — recording engineer, producer, and songwriter based in Barcelona.",
+  icons: {
+    icon: "/icono-web-val.jpeg",
+  },
 };
 
 export default function RootLayout({
